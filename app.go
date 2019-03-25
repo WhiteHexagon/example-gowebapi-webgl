@@ -32,10 +32,9 @@ func addCanvas() {
 	canvasHTML := canvas.HTMLCanvasElementFromJS(canvasE)
 	canvasHTML.SetWidth(uint(width))
 	canvasHTML.SetHeight(uint(height))
-	//canvasHTML.RequestFullscreen(&dom.FullscreenOptions{})	//TODO find a way to do fullscreen request
 
 	contextU := canvasHTML.GetContext("webgl", nil)
-	gl := webgl.WebGLRenderingContextFromJS(contextU)
+	gl := webgl.RenderingContextFromJS(contextU)
 
 	vBuffer, iBuffer, icount := createBuffers(gl)
 
@@ -45,16 +44,16 @@ func addCanvas() {
 	//// Associating shaders to buffer objects ////
 
 	// Bind vertex buffer object
-	gl.BindBuffer(webgl.ARRAYBUFFER_WebGLRenderingContext, vBuffer)
+	gl.BindBuffer(webgl.ARRAY_BUFFER, vBuffer)
 
 	// Bind index buffer object
-	gl.BindBuffer(webgl.ELEMENTARRAYBUFFER_WebGLRenderingContext, iBuffer)
+	gl.BindBuffer(webgl.ELEMENT_ARRAY_BUFFER, iBuffer)
 
 	// Get the attribute location
 	coord := gl.GetAttribLocation(prog, "coordinates")
 
 	// Point an attribute to the currently bound VBO
-	gl.VertexAttribPointer(uint(coord), 3, webgl.FLOAT_WebGLRenderingContext, false, 0, 0)
+	gl.VertexAttribPointer(uint(coord), 3, webgl.FLOAT, false, 0, 0)
 
 	// Enable the attribute
 	gl.EnableVertexAttribArray(uint(coord))
@@ -63,21 +62,21 @@ func addCanvas() {
 
 	// Clear the canvas
 	gl.ClearColor(0.5, 0.5, 0.5, 0.9)
-	gl.Clear(webgl.COLORBUFFERBIT_WebGLRenderingContext)
+	gl.Clear(webgl.COLOR_BUFFER_BIT)
 
 	// Enable the depth test
-	gl.Enable(webgl.DEPTHTEST_WebGLRenderingContext)
+	gl.Enable(webgl.DEPTH_TEST)
 
 	// Set the view port
 	gl.Viewport(0, 0, width, height)
 
 	// Draw the triangle
-	gl.DrawElements(webgl.TRIANGLES_WebGLRenderingContext, icount, webgl.UNSIGNEDSHORT_WebGLRenderingContext, 0)
+	gl.DrawElements(webgl.TRIANGLES, icount, webgl.UNSIGNED_SHORT, 0)
 
 	fmt.Println("done")
 }
 
-func createBuffers(gl *webgl.WebGLRenderingContext) (*webgl.WebGLBuffer, *webgl.WebGLBuffer, int) {
+func createBuffers(gl *webgl.RenderingContext) (*webgl.Buffer, *webgl.Buffer, int) {
 	//// VERTEX BUFFER ////
 	var verticesNative = []float32{
 		-0.5, 0.5, 0,
@@ -88,11 +87,11 @@ func createBuffers(gl *webgl.WebGLRenderingContext) (*webgl.WebGLBuffer, *webgl.
 	// Create buffer
 	vBuffer := gl.CreateBuffer()
 	// Bind to buffer
-	gl.BindBuffer(webgl.ARRAYBUFFER_WebGLRenderingContext, vBuffer)
+	gl.BindBuffer(webgl.ARRAY_BUFFER, vBuffer)
 	// Pass data to buffer
-	gl.BufferData2(webgl.ARRAYBUFFER_WebGLRenderingContext, webgl.UnionFromJS(vertices.Value), webgl.STATICDRAW_WebGLRenderingContext)
+	gl.BufferData2(webgl.ARRAY_BUFFER, webgl.UnionFromJS(vertices.Value), webgl.STATIC_DRAW)
 	// Unbind buffer
-	gl.BindBuffer(webgl.ARRAYBUFFER_WebGLRenderingContext, &webgl.WebGLBuffer{})
+	gl.BindBuffer(webgl.ARRAY_BUFFER, &webgl.Buffer{})
 
 	// INDEX BUFFER ////
 	var indicesNative = []uint32{
@@ -104,17 +103,17 @@ func createBuffers(gl *webgl.WebGLRenderingContext) (*webgl.WebGLBuffer, *webgl.
 	iBuffer := gl.CreateBuffer()
 
 	// Bind to buffer
-	gl.BindBuffer(webgl.ELEMENTARRAYBUFFER_WebGLRenderingContext, iBuffer)
+	gl.BindBuffer(webgl.ELEMENT_ARRAY_BUFFER, iBuffer)
 
 	// Pass data to buffer
-	gl.BufferData2(webgl.ELEMENTARRAYBUFFER_WebGLRenderingContext, webgl.UnionFromJS(indices.Value), webgl.STATICDRAW_WebGLRenderingContext)
+	gl.BufferData2(webgl.ELEMENT_ARRAY_BUFFER, webgl.UnionFromJS(indices.Value), webgl.STATIC_DRAW)
 
 	// Unbind buffer
-	gl.BindBuffer(webgl.ELEMENTARRAYBUFFER_WebGLRenderingContext, &webgl.WebGLBuffer{})
+	gl.BindBuffer(webgl.ELEMENT_ARRAY_BUFFER, &webgl.Buffer{})
 	return vBuffer, iBuffer, len(indicesNative)
 }
 
-func setupShaders(gl *webgl.WebGLRenderingContext) *webgl.WebGLProgram {
+func setupShaders(gl *webgl.RenderingContext) *webgl.Program {
 	// Vertex shader source code
 	vertCode := `
 	attribute vec3 coordinates;
@@ -124,7 +123,7 @@ func setupShaders(gl *webgl.WebGLRenderingContext) *webgl.WebGLProgram {
 	}`
 
 	// Create a vertex shader object
-	vShader := gl.CreateShader(webgl.VERTEXSHADER_WebGLRenderingContext)
+	vShader := gl.CreateShader(webgl.VERTEX_SHADER)
 
 	// Attach vertex shader source code
 	gl.ShaderSource(vShader, vertCode)
@@ -139,7 +138,7 @@ func setupShaders(gl *webgl.WebGLRenderingContext) *webgl.WebGLProgram {
 	}`
 
 	// Create fragment shader object
-	fShader := gl.CreateShader(webgl.FRAGMENTSHADER_WebGLRenderingContext)
+	fShader := gl.CreateShader(webgl.FRAGMENT_SHADER)
 
 	// Attach fragment shader source code
 	gl.ShaderSource(fShader, fragCode)
